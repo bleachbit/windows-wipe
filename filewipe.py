@@ -1,7 +1,7 @@
 """
 ***
 *** filewipe.py
-*** version 0.85 (in development, milestone 2 build to upload as repo)
+*** version 0.86 (in development, fixing QA issues)
 ***
 *** Written for Python 2.6+
 ***
@@ -86,6 +86,7 @@ from win32file import (CreateFile, CreateFileW,
                        LockFile, DeleteFile,
                        SetEndOfFile, FlushFileBuffers,
                        EncryptFile)
+from win32com.shell import shell
 from winioctlcon import (FSCTL_GET_RETRIEVAL_POINTERS,
                          FSCTL_GET_VOLUME_BITMAP,
                          FSCTL_GET_NTFS_VOLUME_DATA,
@@ -95,6 +96,7 @@ from winioctlcon import (FSCTL_GET_RETRIEVAL_POINTERS,
                          FSCTL_SET_ZERO_DATA)
 from win32file import (GENERIC_READ, GENERIC_WRITE, FILE_BEGIN,
                        FILE_SHARE_READ, FILE_SHARE_WRITE,
+                       FILE_SHARE_DELETE,
                        OPEN_EXISTING, CREATE_ALWAYS,
                        DRIVE_REMOTE, DRIVE_CDROM, DRIVE_UNKNOWN)
 from win32con import (FILE_ATTRIBUTE_ENCRYPTED,
@@ -113,7 +115,7 @@ logging_level = logging.DEBUG
 simulate_concurrency = True     # remove this test function when QA complete
 drive_letter_safety = "E"       # protection to only use removeable drives
 # don't use C: or D:, but E: and beyond OK.
-file_name_const = "E:\\smartecat.mdb"
+file_name_const = "E:\\testfile.mdb"
 tmp_file_name = "bbtemp.dat"
 spike_file_name = "bbspike"     # cluster number will be appended
 write_buf_size = 512 * 1024     # 512 kilobytes
@@ -362,14 +364,11 @@ def check_extents_concurrency(extents, volume_bitmap,
 # algorithm is working.
 # This is only used for testing, especially testing concurrency issues.
 def spike_cluster(volume_handle, cluster, tmp_file_path):
-    spike_file_path = os.path.dirname(tmp_file_path)
-    if spike_file_path[-1] != os.sep:
-        spike_file_path += os.sep
-    spike_file_path += spike_file_name + str(cluster)
+    spike_file_path = os.path.join(os.path.dirname(tmp_file_path), spike_file_name + str(cluster))
     file_handle = CreateFile(spike_file_path,
-                             GENERIC_READ | GENERIC_WRITE,
-                             0, None, CREATE_ALWAYS,
-                             0, None)
+                    GENERIC_READ | GENERIC_WRITE,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                    None, CREATE_ALWAYS, 0, None)
     # 2000 bytes is enough to direct the file to its own cluster and not
     # land entirely in the MFT.
     write_zero_fill(file_handle, 2000)
@@ -932,7 +931,8 @@ def file_wipe(file_name):
     logging.info("Attempting defrag file wipe.")
     # Put the temp file in the same folder as the target wipe file.
     # Should be able to write this path if user can write the wipe file.
-    tmp_file_path = os.path.dirname(file_name) + os.sep + tmp_file_name
+    tmp_file_path = os.path.join(os.path.dirname(file_name), tmp_file_name)
+    logging.debug("Full file path is: " + tmp_file_path)
     if is_special:
         orig_extents = choose_if_bridged(volume_handle,
                                 volume_info.total_clusters,
