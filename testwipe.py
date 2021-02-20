@@ -429,6 +429,10 @@ For fill, both the -f and -p flags are required.""")
                 test_folder = options.file
             else:
                 test_folder = test_folder_default
+            if len(test_folder) == 2:
+                # If just drive letter (e.g., "E:" is given, add slash)
+                test_folder += '\\'
+
             suite = unittest.defaultTestLoader.loadTestsFromTestCase(
                 bbTest)
             unittest.TextTestRunner().run(suite)
