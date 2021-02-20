@@ -364,11 +364,12 @@ def check_extents_concurrency(extents, volume_bitmap,
 # algorithm is working.
 # This is only used for testing, especially testing concurrency issues.
 def spike_cluster(volume_handle, cluster, tmp_file_path):
-    spike_file_path = os.path.join(os.path.dirname(tmp_file_path), spike_file_name + str(cluster))
+    spike_file_path = os.path.join(os.path.dirname(
+        tmp_file_path), spike_file_name + str(cluster))
     file_handle = CreateFile(spike_file_path,
-                    GENERIC_READ | GENERIC_WRITE,
-                    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                    None, CREATE_ALWAYS, 0, None)
+                             GENERIC_READ | GENERIC_WRITE,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                             None, CREATE_ALWAYS, 0, None)
     # 2000 bytes is enough to direct the file to its own cluster and not
     # land entirely in the MFT.
     write_zero_fill(file_handle, 2000)
@@ -484,11 +485,11 @@ def get_volume_information(volume):
             "This file system (UDF) is not supported.")
 
     volume_info = namedtuple('VolumeInfo', [
-            'drive_name', 'max_path', 'file_system',
-            'sectors_per_cluster', 'bytes_per_sector', 'total_clusters'])
+        'drive_name', 'max_path', 'file_system',
+        'sectors_per_cluster', 'bytes_per_sector', 'total_clusters'])
 
     return volume_info(result1[0], result1[2], result1[4],
-            result2[0], result2[1], result2[3])
+                       result2[0], result2[1], result2[3])
 
 
 # Get read/write access to a volume.
@@ -935,12 +936,12 @@ def file_wipe(file_name):
     logging.debug("Full file path is: " + tmp_file_path)
     if is_special:
         orig_extents = choose_if_bridged(volume_handle,
-                                volume_info.total_clusters,
-                                orig_extents, bridged_extents)
+                                         volume_info.total_clusters,
+                                         orig_extents, bridged_extents)
     for lcn_start, lcn_end in orig_extents:
         result = wipe_extent_by_defrag(volume_handle, lcn_start, lcn_end,
-                                cluster_size, volume_info.total_clusters,
-                                tmp_file_path)
+                                       cluster_size, volume_info.total_clusters,
+                                       tmp_file_path)
     logging.info("Success!")
 
     # Clean up.

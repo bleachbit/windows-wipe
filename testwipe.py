@@ -122,7 +122,7 @@ def search_volume_for_string(volume, search_text):
         find_result = read_buf.find(search_text)
         if find_result >= 0:
             found_cluster = int(floor((total_bytes - bytes_remaining
-                                            + find_result) / (a * b)))
+                                       + find_result) / (a * b)))
             logging.error("Search text found near cluster %d.", found_cluster)
             volume_bitmap, _ = get_volume_bitmap(volume_handle, c)
             if not check_mapped_bit(volume_bitmap, found_cluster):
@@ -153,10 +153,9 @@ class bbTest(unittest.TestCase):
 
     def setUp(self):
         self.clean_test_files()
-        
+
     def tearDown(self):
         self.clean_test_files()
-
 
     def test_file_operations(self):
         print("Test file attributes and truncate...")
@@ -181,10 +180,10 @@ class bbTest(unittest.TestCase):
         file_wipe(file_path)
         if not noverify:
             found_string = search_volume_for_string(
-                       volume_from_file(file_path), search_token)
+                volume_from_file(file_path), search_token)
             self.assertFalse(found_string,
-                "Search token should not appear during search of entire volume")
-        
+                             "Search token should not appear during search of entire volume")
+
     def test_long_file_name(self):
         print("Test long file name...")
         file_path = test_folder + os.sep + file_name_long
@@ -337,7 +336,7 @@ class bbTest(unittest.TestCase):
         self.assertEqual(info[4] % 512, 0,
                          "Cluster size is a multiple of 512")
         self.assertTrue(info[4] > 0,
-                         "Cluster size is a positive number")
+                        "Cluster size is a positive number")
 
     def test_logical_ranges_to_extents(self):
         print("Test logical ranges to extents...")
@@ -418,9 +417,9 @@ For fill, both the -f and -p flags are required.""")
                 noverify = False
             global test_folder
             if options.file:
-            	test_folder = options.file
+                test_folder = options.file
             else:
-            	test_folder = test_folder_default
+                test_folder = test_folder_default
             suite = unittest.defaultTestLoader.loadTestsFromTestCase(
                 bbTest)
             unittest.TextTestRunner().run(suite)
