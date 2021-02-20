@@ -139,16 +139,21 @@ def search_volume_for_string(volume, search_text):
 class bbTest(unittest.TestCase):
 
     def clean_test_files(self):
-        for delfile in [file_name, file_name_tiny, file_name_long,
-                        file_name_cmpr, file_name_sparse, file_name_encr]:
+        for del_fn_base in [file_name, file_name_tiny, file_name_long,
+                        file_name_cmpr, file_name_sparse, file_name_encr,
+                        file_name_unicode]:
+            del_fn_full = os.path.join(test_folder, del_fn_base)
             try:
-                os.remove(test_folder + os.sep + delfile)
-            except:
-                pass
-        try:
-            os.remove(unicode(test_folder + os.sep) + file_name_unicode)
-        except:
-            pass
+                os.remove(del_fn_full)
+            except WindowsError as e:
+                if e.winerror in (2, 32):
+                    # 2: file does not exist
+                    # 32: used by other process
+                    pass
+                else:
+                    raise e
+            except Exception as e:
+                print('Exception when deleting %s: %s' % (del_fn_full, e))
         [os.remove(x) for x in glob(test_folder + "bbspike*")]
 
     def setUp(self):
@@ -159,7 +164,7 @@ class bbTest(unittest.TestCase):
 
     def test_file_operations(self):
         print("Test file attributes and truncate...")
-        file_path = test_folder + os.sep + file_name
+        file_path = os.path.join(test_folder, file_name)
         os.system('echo | set /p="abcde11111" >%s' % file_path)
         file_handle = open_file(file_path, GENERIC_READ | GENERIC_WRITE)
         file_size, is_special = get_file_basic_info(file_path, file_handle)
@@ -173,7 +178,7 @@ class bbTest(unittest.TestCase):
 
     def test_file_wipe_no_extents(self):
         print("Test file wipe where no extents...")
-        file_path = test_folder + os.sep + file_name_tiny
+        file_path = os.path.join(test_folder, file_name_tiny)
         write_random_test_file(file_path, 32)
         with open(file_path, 'rb') as f:
             search_token = f.read()
@@ -186,19 +191,19 @@ class bbTest(unittest.TestCase):
 
     def test_long_file_name(self):
         print("Test long file name...")
-        file_path = test_folder + os.sep + file_name_long
+        file_path = os.path.join(test_folder, file_name_long)
         write_random_test_file(file_path, 7 * 1024)
         file_wipe(file_path)
 
     def test_unicode_file_name(self):
         print("Test unicode file name...")
-        file_path = unicode(test_folder + os.sep) + file_name_unicode
+        file_path = os.path.join(test_folder, file_name_unicode)
         write_random_test_file(file_path, 7 * 1024)
         file_wipe(file_path)
 
     def test_larger_file_wipe(self):
         print("Test wipe 7MB file...")
-        file_path = test_folder + os.sep + file_name_long
+        file_path = os.path.join(test_folder, file_name_long)
         write_random_test_file(file_path, 7 * 1024**2)
         with open(file_path, 'rb') as f:
             # Seek to somewhere near the middle.
@@ -214,7 +219,7 @@ class bbTest(unittest.TestCase):
 
     def test_well_compressed_file_wipe(self):
         # only applies on NTFS
-        file_path = test_folder + os.sep + file_name_cmpr
+        file_path = os.path.join(test_folder, file_name_cmpr)
         volume = volume_from_file(file_path)
         info = get_volume_information(volume)
         if info[2].upper() != "NTFS":
@@ -241,7 +246,7 @@ class bbTest(unittest.TestCase):
 
     def test_hardly_compressed_file_wipe(self):
         # only applies on NTFS
-        file_path = test_folder + os.sep + file_name_cmpr
+        file_path = os.path.join(test_folder, file_name_cmpr)
         volume = volume_from_file(file_path)
         info = get_volume_information(volume)
         if info[2].upper() != "NTFS":
@@ -268,7 +273,7 @@ class bbTest(unittest.TestCase):
 
     def test_sparse_file_wipe(self):
         # only applies on NTFS
-        file_path = test_folder + os.sep + file_name_sparse
+        file_path = os.path.join(test_folder, file_name_sparse)
         volume = volume_from_file(file_path)
         info = get_volume_information(volume)
         if info[2].upper() != "NTFS":
@@ -298,7 +303,7 @@ class bbTest(unittest.TestCase):
 
     def test_encrypted_file_wipe(self):
         # only applies on NTFS
-        file_path = test_folder + os.sep + file_name_encr
+        file_path = os.path.join(test_folder, file_name_encr)
         volume = volume_from_file(file_path)
         info = get_volume_information(volume)
         if info[2].upper() != "NTFS":
@@ -328,7 +333,7 @@ class bbTest(unittest.TestCase):
 
     def test_volume_operations(self):
         print("Test volume info gathering...")
-        file_path = test_folder + os.sep + file_name
+        file_path = os.path.join(test_folder, file_name)
         volume = volume_from_file(file_path)
         info = get_volume_information(volume)
         self.assertEqual(len(info), 6,
@@ -352,7 +357,7 @@ class bbTest(unittest.TestCase):
 
     def test_get_extents(self):
         print("Test get extents...")
-        file_path = test_folder + os.sep + file_name_tiny
+        file_path = os.path.join(test_folder, file_name_tiny)
         os.system('echo | set /p="abcde12345" >%s' % file_path)
         file_handle = open_file(file_path, GENERIC_READ)
         extents = get_extents(file_handle, False)
@@ -363,7 +368,7 @@ class bbTest(unittest.TestCase):
             self.assertEqual(extents, [],
                              "Get extents; tiny file that fits entirely on MFT")
         CloseHandle(file_handle)
-        file_path = test_folder + os.sep + file_name
+        file_path = os.path.join(test_folder, file_name)
         write_random_test_file(file_path, 7 * 1024)
         file_handle = open_file(file_path, GENERIC_READ)
         extents = get_extents(file_handle, False)
