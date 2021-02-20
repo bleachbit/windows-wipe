@@ -54,7 +54,7 @@ def write_random_test_file(file_name, file_size):
 
 # Create a file filled with data that will compress easily.
 def write_compressable_test_file(file_name, file_size):
-    with open(file_name, 'wb') as f:
+    with open(file_name, 'w') as f:
         f.write(''.rjust(file_size, '|'))
 
 
