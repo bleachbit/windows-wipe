@@ -6,7 +6,7 @@
 *** testwipe.py
 *** version 0.85 (in development, milestone 2 build to upload as repo)
 ***
-*** Written for Python 2.6+
+*** Written for Python 3
 ***
 *** Owner: Andrew Ziem
 *** Author: Peter Marshall
@@ -379,6 +379,10 @@ class bbTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    if sys.version_info < (3,0,0):
+        print('ERROR: BleachBit no longer supports Python 2.x.')
+        sys.exit(1)
+
     # Look at command line arguments.
     parser = OptionParser(usage="testwipe.py test|wipe|search|fill [options]",
                           epilog="""
